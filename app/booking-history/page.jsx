@@ -1,24 +1,10 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  Polyline,
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import dynamic from "next/dynamic";
+const ParcelMap = dynamic(() => import("@/app/components/ParcelMap"), {
+  ssr: false,
+})
 import { fetchApi } from "@/utils/FetchApi";
-
-// Fix default marker icon
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
 
 export default function UserBookingHistory() {
   const [parcels, setParcels] = useState([]);
@@ -98,73 +84,7 @@ export default function UserBookingHistory() {
               parcel?.pickupLocation?.lng != null &&
               parcel?.deliveryLocation?.lat != null &&
               parcel?.deliveryLocation?.lng != null ? (
-                <MapContainer
-                  center={[
-                    parcel.currentLocation?.lat || parcel.deliveryLocation.lat,
-                    parcel.currentLocation?.lng || parcel.deliveryLocation.lng,
-                  ]}
-                  zoom={12}
-                  scrollWheelZoom={false}
-                  style={{ height: "200px", width: "100%" }}
-                >
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap contributors"
-                  />
-
-                  {/* Pickup Marker */}
-                  <Marker
-                    position={[
-                      parcel.pickupLocation.lat,
-                      parcel.pickupLocation.lng,
-                    ]}
-                  >
-                    <Popup>Pickup Location</Popup>
-                  </Marker>
-
-                  {/* Delivery Marker */}
-                  <Marker
-                    position={[
-                      parcel.deliveryLocation.lat,
-                      parcel.deliveryLocation.lng,
-                    ]}
-                  >
-                    <Popup>Delivery Location</Popup>
-                  </Marker>
-
-                  {/* Current Location Marker */}
-                  {parcel.currentLocation?.lat != null &&
-                    parcel.currentLocation?.lng != null && (
-                      <Marker
-                        position={[
-                          parcel.currentLocation.lat,
-                          parcel.currentLocation.lng,
-                        ]}
-                      >
-                        <Popup>Current Location</Popup>
-                      </Marker>
-                    )}
-
-                  {/* Route Line: Pickup → Current → Delivery */}
-                  <Polyline
-                    positions={[
-                      [parcel.pickupLocation.lat, parcel.pickupLocation.lng],
-                      ...(parcel.currentLocation?.lat
-                        ? [
-                            [
-                              parcel.currentLocation.lat,
-                              parcel.currentLocation.lng,
-                            ],
-                          ]
-                        : []),
-                      [
-                        parcel.deliveryLocation.lat,
-                        parcel.deliveryLocation.lng,
-                      ],
-                    ]}
-                    pathOptions={{ color: "skyblue", weight: 5 }}
-                  />
-                </MapContainer>
+                <ParcelMap parcel={parcel} />
               ) : (
                 <p className="text-red-600">Location data is missing</p>
               )}

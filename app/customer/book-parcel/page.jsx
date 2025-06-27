@@ -1,30 +1,11 @@
 "use client";
 import { useState } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
-import L from "leaflet";
-import { fetchApi } from "@/utils/FetchApi";
-import "leaflet/dist/leaflet.css";
-
-// Fix default marker icon issues with Leaflet + Webpack:
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+import dynamic from "next/dynamic";
+const MapSelector = dynamic(() => import("@/app/components/MapSelector"), {
+  ssr: false,
 });
+import { fetchApi } from "@/utils/FetchApi";
 
-const center = [23.8103, 90.4125]; // Dhaka
-
-function LocationSelector({ position, setPosition }) {
-  useMapEvents({
-    click(e) {
-      setPosition(e.latlng);
-    },
-  });
-
-  return position ? <Marker position={position} /> : null;
-}
 
 export default function BookParcelPage() {
   const [form, setForm] = useState({
@@ -167,48 +148,18 @@ export default function BookParcelPage() {
             {isLoading ? "🚚 Booking..." : "🚚 Book Parcel"}
           </button>
         </div>
-
         {/* Right side: Maps */}
         <div className="md:w-1/2 flex flex-col gap-6">
-          <div>
-            <h3 className="font-semibold mb-2 text-gray-700">
-              📍 Select Pickup Location
-            </h3>
-            <MapContainer
-              center={center}
-              zoom={12}
-              style={{ height: "300px", width: "100%" }}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution="&copy; OpenStreetMap contributors"
-              />
-              <LocationSelector
-                position={pickupPosition}
-                setPosition={setPickupPosition}
-              />
-            </MapContainer>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-2 text-gray-700">
-              📦 Select Delivery Location
-            </h3>
-            <MapContainer
-              center={center}
-              zoom={12}
-              style={{ height: "300px", width: "100%" }}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution="&copy; OpenStreetMap contributors"
-              />
-              <LocationSelector
-                position={deliveryPosition}
-                setPosition={setDeliveryPosition}
-              />
-            </MapContainer>
-          </div>
+          <MapSelector
+            title="📍 Select Pickup Location"
+            position={pickupPosition}
+            setPosition={setPickupPosition}
+          />
+          <MapSelector
+            title="📦 Select Delivery Location"
+            position={deliveryPosition}
+            setPosition={setDeliveryPosition}
+          />
         </div>
       </div>
     </form>
