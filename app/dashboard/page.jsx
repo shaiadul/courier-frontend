@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchApi } from "@/utils/FetchApi";
 import { Bar, Pie } from "react-chartjs-2";
 import {
@@ -14,6 +14,8 @@ import {
 } from "chart.js";
 import { Download, User, PackageSearch } from "lucide-react";
 import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 ChartJS.register(
   ArcElement,
@@ -29,6 +31,10 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [parcels, setParcels] = useState([]);
   const [agents, setAgents] = useState([]);
+
+  const parcelTypeChartRef = useRef(null);
+  const statusChartRef = useRef(null);
+  const codChartRef = useRef(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -46,17 +52,102 @@ export default function AdminDashboard() {
   const handleExportCSV = () => {
     const csvData = parcels.map(
       (p) =>
-        `${p._id},${p.recipientName},${p.status},${p.parcelType},${
-          p.isCOD ? "COD" : "Prepaid"
-        }`
+        `${p._id},${p.recipientName},${p.recipientEmail},${p.status},${
+          p.parcelType
+        },${p.isCOD ? "COD" : "Prepaid"}`
     );
+
     const blob = new Blob(
-      ["ID,Recipient,Status,Type,Payment Mode\n" + csvData.join("\n")],
-      {
-        type: "text/csv;charset=utf-8;",
-      }
+      [
+        "ID,Recipient Name,Recipient Email,Status,Type,Payment Mode\n" +
+          csvData.join("\n"),
+      ],
+      { type: "text/csv;charset=utf-8;" }
     );
+
     saveAs(blob, "parcel-report.csv");
+  };
+
+  const handleExportPDF = async () => {
+    const doc = new jsPDF("p", "mm", "a4");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("Parcel Report of CourierX", 14, 16);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    const summaryY = 26;
+    const lineHeight = 8;
+
+    doc.text(
+      `Avg Delivery Time: ${analytics.averageDeliveryTimeHours} hrs`,
+      14,
+      summaryY
+    );
+    doc.text(
+      `Completion Rate: ${analytics.deliveryCompletionRate}`,
+      14,
+      summaryY + lineHeight
+    );
+    doc.text(
+      `Assign Delay: ${analytics.averageAssignDelayHours} hrs`,
+      14,
+      summaryY + 2 * lineHeight
+    );
+
+    // 🖼️ Charts
+    const chart1 = parcelTypeChartRef.current?.toBase64Image();
+    const chart2 = statusChartRef.current?.toBase64Image();
+    const chart3 = codChartRef.current?.toBase64Image();
+
+    if (chart1 && chart2 && chart3) {
+      const chartsY = summaryY + 3 * lineHeight + 10;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("Parcel Insights", 14, chartsY);
+
+      // First chart: full width
+      doc.addImage(chart1, "PNG", 15, chartsY + 5, 180, 70);
+
+      // Two charts side-by-side below
+      doc.addImage(chart2, "PNG", 15, chartsY + 80, 85, 60); // left
+      doc.addImage(chart3, "PNG", 110, chartsY + 80, 85, 60); // right
+    }
+
+    // 📋 Table Page
+    doc.addPage();
+    doc.setFontSize(16);
+    doc.text("Parcel Details Table", 14, 16);
+
+    const tableColumn = [
+      "ID",
+      "Recipient",
+      "Email",
+      "Status",
+      "Type",
+      "Payment Mode",
+    ];
+
+    const tableRows = parcels.map((p) => [
+      p._id,
+      p.recipientName,
+      p.recipientEmail,
+      p.status,
+      p.parcelType,
+      p.isCOD ? "COD" : "Prepaid",
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 22,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [79, 70, 229] },
+    });
+
+    doc.save("parcel-report.pdf");
   };
 
   const handleAssignAgent = async (parcelId, agentId) => {
@@ -139,18 +230,47 @@ export default function AdminDashboard() {
 
           <div className="bg-white p-4 shadow rounded flex items-center justify-between">
             <h2 className="text-lg font-semibold">📥 Export Parcel Report</h2>
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              <Download size={16} /> Export CSV
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleExportCSV}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                <Download size={16} /> CSV
+              </button>
+              <button
+                onClick={handleExportPDF}
+                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                <Download size={16} /> PDF
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 shadow rounded">
+            <h2 className="text-lg font-semibold mb-2">Top Agents</h2>
+            <ul className="list-disc pl-5">
+              {analytics.topAgentsByDelivery.map((agentData, idx) => {
+                const matchedAgent = agents.find(
+                  (a) => a._id === agentData._id
+                );
+                const name = matchedAgent ? matchedAgent.name : "Unknown Agent";
+                return (
+                  <li key={idx}>
+                    {matchedAgent
+                      ? `${matchedAgent.name} (${matchedAgent.email})`
+                      : "Unknown Agent"}
+                    - {agentData.count} deliveries
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           {/* Parcel Type Stats */}
-          <div className="bg-white p-4 shadow-lg rounded-lg">
+          <div className="bg-white p-4 shadow-lg rounded-lg col-span-2">
             <h2 className="text-lg font-semibold mb-4">📦 Parcel Type Stats</h2>
             <Bar
+              ref={parcelTypeChartRef}
               data={{
                 labels: analytics.parcelTypeStats.map((d) => d._id),
                 datasets: [
@@ -189,6 +309,7 @@ export default function AdminDashboard() {
               📍 Parcel Status Stats
             </h2>
             <Pie
+              ref={statusChartRef}
               data={{
                 labels: analytics.statusStats.map((d) => d._id),
                 datasets: [
@@ -236,6 +357,7 @@ export default function AdminDashboard() {
           <div className="bg-white p-4 shadow-lg rounded-lg">
             <h2 className="text-lg font-semibold mb-4">💰 COD vs Prepaid</h2>
             <Pie
+              ref={codChartRef}
               data={{
                 labels: analytics.codVsPrepaid.map((d) =>
                   d._id ? "COD" : "Prepaid"
@@ -273,26 +395,6 @@ export default function AdminDashboard() {
                 },
               }}
             />
-          </div>
-
-          <div className="bg-white p-4 shadow rounded">
-            <h2 className="text-lg font-semibold mb-2">Top Agents</h2>
-            <ul className="list-disc pl-5">
-              {analytics.topAgentsByDelivery.map((agentData, idx) => {
-                const matchedAgent = agents.find(
-                  (a) => a._id === agentData._id
-                );
-                const name = matchedAgent ? matchedAgent.name : "Unknown Agent";
-                return (
-                  <li key={idx}>
-                    {matchedAgent
-                      ? `${matchedAgent.name} (${matchedAgent.email})`
-                      : "Unknown Agent"}
-                    - {agentData.count} deliveries
-                  </li>
-                );
-              })}
-            </ul>
           </div>
         </div>
       ) : (
