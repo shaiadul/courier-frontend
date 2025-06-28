@@ -94,21 +94,26 @@ export default function Navbar() {
                   >
                     <HistoryIcon className="w-4 h-4 mr-2" /> My Bookings
                   </Link>
-                  <Link
-                    href="/agent-assigned"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <ThermometerSnowflake className="w-4 h-4 mr-2" /> My
-                    Assigned
-                  </Link>
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setDropdownOpen(false)}
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <LayoutDashboard className="w-4 h-4 mr-2" /> My Dashboard
-                  </Link>
+                  {user.role === "agent" && (
+                    <Link
+                      href="/agent-assigned"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <ThermometerSnowflake className="w-4 h-4 mr-2" /> My
+                      Assigned
+                    </Link>
+                  )}
+                  {user.role === "admin" && (
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
+                    </Link>
+                  )}
+               
 
                   <button
                     onClick={handleLogout}

@@ -147,39 +147,94 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          <div className="bg-white p-4 shadow rounded">
-            <h2 className="text-lg font-semibold mb-2">Parcel Type Stats</h2>
+          {/* Parcel Type Stats */}
+          <div className="bg-white p-4 shadow-lg rounded-lg">
+            <h2 className="text-lg font-semibold mb-4">📦 Parcel Type Stats</h2>
             <Bar
               data={{
                 labels: analytics.parcelTypeStats.map((d) => d._id),
                 datasets: [
                   {
-                    label: "Count",
+                    label: "Parcels",
                     data: analytics.parcelTypeStats.map((d) => d.count),
                     backgroundColor: "#4F46E5",
+                    borderRadius: 5,
                   },
                 ],
+              }}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: { enabled: true },
+                  title: {
+                    display: true,
+                    text: "Parcel Type Distribution",
+                    font: { size: 16 },
+                  },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 },
+                  },
+                },
               }}
             />
           </div>
 
-          <div className="bg-white p-4 shadow rounded">
-            <h2 className="text-lg font-semibold mb-2">Status Stats</h2>
+          {/* Status Stats */}
+          <div className="bg-white p-4 shadow-lg rounded-lg">
+            <h2 className="text-lg font-semibold mb-4">
+              📍 Parcel Status Stats
+            </h2>
             <Pie
               data={{
                 labels: analytics.statusStats.map((d) => d._id),
                 datasets: [
                   {
                     data: analytics.statusStats.map((d) => d.count),
-                    backgroundColor: ["#10B981", "#F59E0B", "#EF4444"],
+                    backgroundColor: [
+                      "#10B981",
+                      "#F59E0B",
+                      "#EF4444",
+                      "#6366F1",
+                    ],
                   },
                 ],
+              }}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: "bottom",
+                    labels: {
+                      color: "#374151",
+                      padding: 16,
+                      font: { size: 14 },
+                    },
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) =>
+                        `${ctx.label}: ${ctx.parsed} (${(
+                          (ctx.parsed /
+                            analytics.statusStats.reduce(
+                              (sum, s) => sum + s.count,
+                              0
+                            )) *
+                          100
+                        ).toFixed(1)}%)`,
+                    },
+                  },
+                },
               }}
             />
           </div>
 
-          <div className="bg-white p-4 shadow rounded">
-            <h2 className="text-lg font-semibold mb-2">COD vs Prepaid</h2>
+          {/* COD vs Prepaid */}
+          <div className="bg-white p-4 shadow-lg rounded-lg">
+            <h2 className="text-lg font-semibold mb-4">💰 COD vs Prepaid</h2>
             <Pie
               data={{
                 labels: analytics.codVsPrepaid.map((d) =>
@@ -192,17 +247,51 @@ export default function AdminDashboard() {
                   },
                 ],
               }}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: "bottom",
+                    labels: {
+                      color: "#374151",
+                      font: { size: 14 },
+                    },
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) =>
+                        `${ctx.label}: ${ctx.parsed} (${(
+                          (ctx.parsed /
+                            analytics.codVsPrepaid.reduce(
+                              (sum, s) => sum + s.count,
+                              0
+                            )) *
+                          100
+                        ).toFixed(1)}%)`,
+                    },
+                  },
+                },
+              }}
             />
           </div>
 
           <div className="bg-white p-4 shadow rounded">
             <h2 className="text-lg font-semibold mb-2">Top Agents</h2>
             <ul className="list-disc pl-5">
-              {analytics.topAgentsByDelivery.map((agent, idx) => (
-                <li key={idx}>
-                  Agent ID: {agent._id} - {agent.count} deliveries
-                </li>
-              ))}
+              {analytics.topAgentsByDelivery.map((agentData, idx) => {
+                const matchedAgent = agents.find(
+                  (a) => a._id === agentData._id
+                );
+                const name = matchedAgent ? matchedAgent.name : "Unknown Agent";
+                return (
+                  <li key={idx}>
+                    {matchedAgent
+                      ? `${matchedAgent.name} (${matchedAgent.email})`
+                      : "Unknown Agent"}
+                    - {agentData.count} deliveries
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
