@@ -12,33 +12,35 @@ import {
   ThermometerSnowflake,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { clearUser, setUser } from "@/redux/slice/authSlice";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
-    const userData = localStorage.getItem("userInfo");
-    if (userData) {
+    const storedUser = localStorage.getItem("userInfo");
+    if (storedUser) {
       try {
-        setUser(userData);
+        dispatch(setUser(JSON.parse(storedUser)));
       } catch (err) {
         console.error("Failed to parse userInfo");
       }
     }
-  }, []);
+  }, [dispatch]);
 
   const handleLogout = () => {
-    localStorage.removeItem("userInfo");
-    setUser(null);
+    localStorage.removeItem("accessToken");
+    dispatch(clearUser());
     setDropdownOpen(false);
     router.push("/auth/signin");
   };
-
-
 
   return (
     <nav className="bg-white shadow-md fixed w-full z-50">
@@ -52,7 +54,7 @@ export default function Navbar() {
             Home
           </Link>
 
-          {!user ? (
+          {!user?.name ? (
             <>
               <Link
                 className="hover:text-blue-600 duration-700"
@@ -105,8 +107,7 @@ export default function Navbar() {
                     onClick={() => setDropdownOpen(false)}
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    <LayoutDashboard className="w-4 h-4 mr-2" /> My
-                    Dashboard
+                    <LayoutDashboard className="w-4 h-4 mr-2" /> My Dashboard
                   </Link>
 
                   <button

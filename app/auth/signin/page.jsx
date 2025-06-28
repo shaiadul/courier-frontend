@@ -4,6 +4,8 @@ import { useState } from "react";
 import { fetchApi } from "@/utils/FetchApi";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { setUser } from "@/redux/slice/authSlice";
+import { useDispatch } from "react-redux";
 
 export default function SignInPage() {
   const [formData, setFormData] = useState({
@@ -15,6 +17,7 @@ export default function SignInPage() {
   const [message, setMessage] = useState("");
 
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -34,9 +37,9 @@ export default function SignInPage() {
 
       if (res?.access_token && res?.user) {
         localStorage.setItem("accessToken", res.access_token);
-        localStorage.setItem("userInfo", JSON.stringify(res.user));
+        dispatch(setUser(res.user));
         setMessage("Login successful!");
-        router.push("/"); 
+        router.push("/");
       } else {
         setMessage(res.message || "Login failed.");
       }

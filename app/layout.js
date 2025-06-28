@@ -1,7 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import 'leaflet/dist/leaflet.css';
+import "leaflet/dist/leaflet.css";
 import Navbar from "./components/Navbar";
+import { Providers } from "@/redux/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "CourierX",
-  description: "CourierX is a courier service application developed by CourierX Team",
+  description:
+    "CourierX is a courier service application developed by CourierX Team",
 };
 
 export default function RootLayout({ children }) {
@@ -24,8 +26,10 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navbar />
-        {children}
+        <Providers>
+          <Navbar />
+          {children}
+        </Providers>
       </body>
     </html>
   );
