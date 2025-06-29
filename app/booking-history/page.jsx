@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 const ParcelMap = dynamic(() => import("@/app/components/ParcelMap"), {
   ssr: false,
-})
+});
 import { fetchApi } from "@/utils/FetchApi";
+import QRCode from "react-qr-code";
+import html2canvas from "html2canvas";
 
 export default function UserBookingHistory() {
   const [parcels, setParcels] = useState([]);
@@ -35,10 +37,21 @@ export default function UserBookingHistory() {
     fetchParcels();
   }, []);
 
+  const handleDownloadQRCode = async (id) => {
+    const qrElement = document.getElementById(`qr-${id}`);
+    if (!qrElement) return;
+
+    const canvas = await html2canvas(qrElement);
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `qr-code-${id}.png`;
+    link.click();
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-4">
       <h1 className="text-3xl font-bold text-blue-600 mb-6 text-center mt-20">
-        📋 My Parcel Bookings
+        📋 My Bookings Parcel
       </h1>
 
       {loading ? (
@@ -50,10 +63,11 @@ export default function UserBookingHistory() {
           {parcels.map((parcel) => (
             <div
               key={parcel._id}
-              className="bg-white rounded shadow p-4 space-y-2 border border-gray-200"
+              className="bg-white rounded-lg shadow-md p-4 space-y-4 border border-gray-200"
             >
-              <div className="flex justify-between items-center">
-                <div>
+              <div className="flex flex-col md:flex-row justify-between gap-6">
+                {/* Parcel Info */}
+                <div className="flex-1 space-y-1">
                   <p>
                     <strong>To:</strong> {parcel.recipientName} (
                     {parcel.recipientEmail})
@@ -71,15 +85,37 @@ export default function UserBookingHistory() {
                     </span>
                   </p>
                 </div>
-                <div>
-                  <p className="text-right text-xl font-bold">
-                    <strong>Tracking Id:</strong>{" "}
-                    <strong className="text-teal-600">{parcel._id}</strong>
+
+                {/* QR Code + Tracking */}
+                <div className="flex flex-col items-center md:items-end">
+                  <div
+                    className="bg-white p-2 rounded-lg shadow-sm mb-2"
+                    id={`qr-${parcel._id}`}
+                  >
+                    <QRCode
+                      value={`https://yourdomain.com/track/${parcel._id}`}
+                      size={100}
+                      bgColor="#ffffff"
+                      fgColor="#000000"
+                      level="H"
+                      includeMargin={true}
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleDownloadQRCode(parcel._id)}
+                    className="text-sm text-white bg-teal-600 px-4 py-1.5 rounded hover:bg-teal-700 transition-colors duration-200"
+                  >
+                    ⬇️ Download QR
+                  </button>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Parcel ID:{" "}
+                    <span className="font-mono text-teal-700">
+                      {parcel._id}
+                    </span>
                   </p>
                 </div>
               </div>
 
-              {/* Map preview */}
               {parcel?.pickupLocation?.lat != null &&
               parcel?.pickupLocation?.lng != null &&
               parcel?.deliveryLocation?.lat != null &&

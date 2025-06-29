@@ -3,6 +3,7 @@ import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import Navbar from "./components/Navbar";
 import { Providers } from "@/redux/providers";
+import SessionWatcher from "@/utils/SessionWatcher";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
+          <SessionWatcher />
           <Navbar />
           {children}
         </Providers>
