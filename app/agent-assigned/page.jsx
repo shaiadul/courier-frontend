@@ -37,6 +37,45 @@ export default function AgentAssignedParcels() {
     fetchAssignedParcels();
   }, []);
 
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("userInfo") || "{}");
+    if (!user?.id) return;
+
+    const interval = setInterval(() => {
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords }) => {
+          const { latitude: lat, longitude: lng } = coords;
+
+          for (const parcel of parcels) {
+            try {
+              await fetchApi(`/parcels/${parcel._id}/location`, "PUT", {
+                lat,
+                lng,
+              });
+
+              socket.emit("location-update", {
+                parcelId: parcel._id,
+                lat,
+                lng,
+              });
+
+              console.log(`Updated location for parcel ${parcel._id}`);
+            } catch (err) {
+              console.error("Auto location update failed:", err);
+            }
+          }
+        },
+        (err) => {
+          console.error("Auto geolocation failed:", err);
+        }
+      );
+    }, 5000); // every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [parcels]);
+
   const handleLocationUpdate = async (parcelId) => {
     if (!navigator.geolocation) return alert("Geolocation not supported");
 
@@ -104,10 +143,11 @@ export default function AgentAssignedParcels() {
               key={parcel._id}
               className="bg-white rounded shadow p-4 space-y-2 border border-gray-200"
             >
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
                 <div>
                   <p>
-                    <strong>To:</strong> {parcel.recipientName} ({parcel.recipientEmail})
+                    <strong>To:</strong> {parcel.recipientName} (
+                    {parcel.recipientEmail})
                   </p>
                   <p>
                     <strong>Type:</strong> {parcel.parcelType}
@@ -122,47 +162,49 @@ export default function AgentAssignedParcels() {
                     <strong>Pickup:</strong> {parcel.pickupAddress}
                   </p>
                 </div>
-                <div className="mt-4">
-                  <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Update Status
-                  </label>
-                  <div className="relative inline-block w-52">
-                    <select
-                      defaultValue={parcel.status}
-                      onChange={(e) =>
-                        handleStatusUpdate(parcel, e.target.value)
-                      }
-                      className="block w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-2 pr-8 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    >
-                      <option value="Picked Up">🚚 Picked Up</option>
-                      <option value="In Transit">📦 In Transit</option>
-                      <option value="Delivered">✅ Delivered</option>
-                      <option value="Failed">❌ Failed</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                      <svg
-                        className="h-4 w-4 fill-current"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
+                <div className="flex flex-col md:ml-auto">
+                  <div className="my-4 md:ml-auto">
+                    <label className="block mb-1 text-sm md:text-right font-medium text-gray-700">
+                      Update Status
+                    </label>
+                    <div className="relative inline-block w-52">
+                      <select
+                        defaultValue={parcel.status}
+                        onChange={(e) =>
+                          handleStatusUpdate(parcel, e.target.value)
+                        }
+                        className="block w-full sm:w-52 appearance-none rounded-lg border-none px-4 py-2 pr-8 text-sm shadow-lg focus:outline-0"
                       >
-                        <path d="M5.516 7.548a.75.75 0 0 1 1.06.056L10 11.44l3.424-3.836a.75.75 0 1 1 1.112 1.004l-4 4.5a.75.75 0 0 1-1.112 0l-4-4.5a.75.75 0 0 1 .056-1.06z" />
-                      </svg>
+                        <option value="Picked Up">🚚 Picked Up</option>
+                        <option value="In Transit">📦 In Transit</option>
+                        <option value="Delivered">✅ Delivered</option>
+                        <option value="Failed">❌ Failed</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                        <svg
+                          className="h-4 w-4 fill-current"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M5.516 7.548a.75.75 0 0 1 1.06.056L10 11.44l3.424-3.836a.75.75 0 1 1 1.112 1.004l-4 4.5a.75.75 0 0 1-1.112 0l-4-4.5a.75.75 0 0 1 .056-1.06z" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <p className="text-right text-sm font-semibold">
-                    📦 Tracking ID:{" "}
-                    <span className="text-indigo-600">{parcel._id}</span>
-                  </p>
-                  <button
+                  <div>
+                    <p className="md:text-right text-sm font-semibold">
+                      📦 Tracking ID:{" "}
+                      <span className="text-indigo-600">{parcel._id}</span>
+                    </p>
+                    {/* <button
                     disabled={locationUpdating}
                     onClick={() => handleLocationUpdate(parcel._id)}
-                    className="mt-2 px-4 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                    className="mt-2 w-full sm:w-auto px-4 py-1 bg-green-500 text-white rounded hover:bg-green-600"
                   >
                     {locationUpdating ? "Updating..." : "Update My Location"}
-                  </button>
+                  </button> */}
+                  </div>
                 </div>
               </div>
 

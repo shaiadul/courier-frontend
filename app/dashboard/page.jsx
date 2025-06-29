@@ -161,13 +161,13 @@ export default function AdminDashboard() {
   };
 
   return (
-    <main className="max-w-6xl mx-auto px-6 py-20">
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16">
       <h1 className="text-3xl font-bold mb-6">📊 Admin Dashboard</h1>
 
       <div className="mt-10">
         <h2 className="text-2xl font-bold mb-4">📦 All Booked Parcels</h2>
         <div className="overflow-x-auto border rounded-lg">
-          <table className="min-w-full text-sm text-left">
+          <table className="min-w-[600px] w-full text-sm text-left">
             <thead className="bg-gray-100 text-xs uppercase">
               <tr>
                 <th className="px-4 py-2">Recipient</th>
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
       </div>
 
       {analytics ? (
-        <div className="grid md:grid-cols-2 gap-6 py-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 py-10">
           <div className="bg-white p-4 shadow rounded">
             <h2 className="text-lg font-semibold mb-2">Delivery Metrics</h2>
             <p>
@@ -229,13 +229,13 @@ export default function AdminDashboard() {
             <div className="flex gap-3">
               <button
                 onClick={handleExportCSV}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="flex items-center gap-2 bg-blue-600 text-white px-2.5 md:px-4 py-1 md:py-2 rounded hover:bg-blue-700"
               >
                 <Download size={16} /> CSV
               </button>
               <button
                 onClick={handleExportPDF}
-                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                className="flex items-center gap-2 bg-red-600 text-white px-2.5 md:px-4 py-1 md:py-2 rounded hover:bg-red-700"
               >
                 <Download size={16} /> PDF
               </button>
@@ -263,7 +263,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Parcel Type Stats */}
-          <div className="bg-white p-4 shadow-lg rounded-lg col-span-2">
+          <div className="bg-white p-4 shadow-lg rounded-lg md:col-span-2">
             <h2 className="text-lg font-semibold mb-4">📦 Parcel Type Stats</h2>
             <Bar
               ref={parcelTypeChartRef}

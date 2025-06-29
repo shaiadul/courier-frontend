@@ -113,7 +113,6 @@ export default function Navbar() {
                       <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
                     </Link>
                   )}
-               
 
                   <button
                     onClick={handleLogout}
@@ -135,7 +134,6 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -153,7 +151,8 @@ export default function Navbar() {
               >
                 Home
               </Link>
-              {!user ? (
+
+              {!user?.name ? (
                 <>
                   <Link
                     href="/auth/signin"
@@ -184,14 +183,35 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                     className="hover:text-blue-600 duration-700"
                   >
-                    History
+                    My Bookings
                   </Link>
+
+                  {user.role === "agent" && (
+                    <Link
+                      href="/agent-assigned"
+                      onClick={() => setIsOpen(false)}
+                      className="hover:text-blue-600 duration-700"
+                    >
+                      My Assigned
+                    </Link>
+                  )}
+
+                  {user.role === "admin" && (
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsOpen(false)}
+                      className="hover:text-blue-600 duration-700"
+                    >
+                      Dashboard
+                    </Link>
+                  )}
+
                   <button
                     onClick={() => {
                       handleLogout();
                       setIsOpen(false);
                     }}
-                    className="text-left hover:text-red-600 duration-700"
+                    className="text-left text-red-600 hover:text-red-800 duration-700"
                   >
                     Logout
                   </button>
