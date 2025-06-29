@@ -7,10 +7,13 @@ const ParcelMap = dynamic(() => import("@/app/components/ParcelMap"), {
 import { fetchApi } from "@/utils/FetchApi";
 import QRCode from "react-qr-code";
 import html2canvas from "html2canvas";
+import { useRouter } from "next/navigation";
 
 export default function UserBookingHistory() {
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchParcels = async () => {
@@ -48,6 +51,10 @@ export default function UserBookingHistory() {
     link.click();
   };
 
+  const handleGoToParcel = (id) => {
+    router.push(`/booking-history/${id}`);
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-4">
       <h1 className="text-3xl font-bold text-blue-600 mb-6 text-center mt-20">
@@ -63,10 +70,11 @@ export default function UserBookingHistory() {
           {parcels.map((parcel) => (
             <div
               key={parcel._id}
+              onClick={() => handleGoToParcel(parcel._id)}
               className="bg-white rounded-lg shadow-md p-4 space-y-4 border border-gray-200"
             >
               <div className="flex flex-col md:flex-row justify-between gap-6">
-                {/* Parcel Info */}
+           
                 <div className="flex-1 space-y-1">
                   <p>
                     <strong>To:</strong> {parcel.recipientName} (
