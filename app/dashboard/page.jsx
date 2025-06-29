@@ -96,7 +96,6 @@ export default function AdminDashboard() {
       summaryY + 2 * lineHeight
     );
 
-    // 🖼️ Charts
     const chart1 = parcelTypeChartRef.current?.toBase64Image();
     const chart2 = statusChartRef.current?.toBase64Image();
     const chart3 = codChartRef.current?.toBase64Image();
@@ -108,15 +107,12 @@ export default function AdminDashboard() {
       doc.setFontSize(14);
       doc.text("Parcel Insights", 14, chartsY);
 
-      // First chart: full width
       doc.addImage(chart1, "PNG", 15, chartsY + 5, 180, 70);
 
-      // Two charts side-by-side below
       doc.addImage(chart2, "PNG", 15, chartsY + 80, 85, 60); // left
       doc.addImage(chart3, "PNG", 110, chartsY + 80, 85, 60); // right
     }
 
-    // 📋 Table Page
     doc.addPage();
     doc.setFontSize(16);
     doc.text("Parcel Details Table", 14, 16);
